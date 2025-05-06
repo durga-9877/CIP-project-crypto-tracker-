@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Card, Input, Typography, Space, Button, Statistic, Row, Col, Divider, Tabs, Alert, Spin, InputNumber } from 'antd';
+import { Card, Input, Typography, Space, Button, Statistic, Row, Col, Divider, Tabs, Alert, Spin, InputNumber, Select } from 'antd';
 import { 
   SearchOutlined, 
   DollarOutlined, 
@@ -19,6 +19,7 @@ const CryptoSearch = () => {
   const [error, setError] = useState(null);
   const [buyAmount, setBuyAmount] = useState(0);
   const [suggestedAmounts] = useState([100, 500, 1000, 5000]);
+  const [selectedCurrency, setSelectedCurrency] = useState('usd');
 
   const handleSearch = async (value) => {
     if (!value) return;
@@ -36,7 +37,7 @@ const CryptoSearch = () => {
       // Get detailed information about the cryptocurrency
       const [coinData, marketData] = await Promise.all([
         axios.get(`https://api.coingecko.com/api/v3/coins/${coinId}`),
-        axios.get(`https://api.coingecko.com/api/v3/coins/${coinId}/market_chart?vs_currency=usd&days=1`)
+        axios.get(`https://api.coingecko.com/api/v3/coins/${coinId}/market_chart?vs_currency=${selectedCurrency}&days=1`)
       ]);
 
       const priceData = marketData.data.prices;
@@ -49,8 +50,8 @@ const CryptoSearch = () => {
         name: coinData.data.name,
         symbol: coinData.data.symbol.toUpperCase(),
         price: currentPrice,
-        marketCap: coinData.data.market_data.market_cap.usd,
-        volume24h: coinData.data.market_data.total_volume.usd,
+        marketCap: coinData.data.market_data.market_cap[selectedCurrency],
+        volume24h: coinData.data.market_data.total_volume[selectedCurrency],
         change24h: priceChange,
         description: coinData.data.description.en,
         technicalDetails: {
@@ -87,7 +88,7 @@ const CryptoSearch = () => {
   const formatCurrency = (value) => {
     return new Intl.NumberFormat('en-US', {
       style: 'currency',
-      currency: 'USD'
+      currency: selectedCurrency.toUpperCase()
     }).format(value);
   };
 
@@ -102,6 +103,16 @@ const CryptoSearch = () => {
           onSearch={handleSearch}
           style={{ marginBottom: '20px' }}
         />
+
+        <Select
+          value={selectedCurrency}
+          onChange={setSelectedCurrency}
+          style={{ width: 120, marginBottom: '20px' }}
+        >
+          <Select.Option value="usd">USD</Select.Option>
+          <Select.Option value="inr">INR</Select.Option>
+          <Select.Option value="eur">EUR</Select.Option>
+        </Select>
 
         {error && (
           <Alert

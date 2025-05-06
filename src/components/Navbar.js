@@ -1,5 +1,5 @@
 import React from 'react';
-import styled from 'styled-components';
+import { useNavigate } from 'react-router-dom';
 import {
   AppBar,
   Toolbar,
@@ -15,66 +15,76 @@ import {
 import {
   Search as SearchIcon,
   Notifications as NotificationsIcon,
-  Settings as SettingsIcon
+  Settings as SettingsIcon,
+  Brightness4,
+  Brightness7
 } from '@mui/icons-material';
+import { styled } from '@mui/material/styles';
+import ProfileMenu from './ProfileMenu';
+import { useTheme } from '@mui/material/styles';
 
-const StyledAppBar = styled(AppBar)`
-  background: rgba(26, 31, 60, 0.8) !important;
-  backdrop-filter: blur(10px);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-`;
+const StyledAppBar = styled(AppBar)(({ theme }) => ({
+  backgroundColor: 'rgba(0, 0, 0, 0.8)',
+  color: '#00ff00',
+  boxShadow: '0 4px 8px rgba(0, 255, 0, 0.2)',
+  backdropFilter: 'blur(10px)',
+  borderBottom: `1px solid ${alpha('#00ff00', 0.2)}`,
+  padding: theme.spacing(1, 2),
+}));
 
-const Search = styled.div`
-  position: relative;
-  border-radius: 12px;
-  background-color: ${alpha('#ffffff', 0.1)};
-  margin-right: 16px;
-  margin-left: 0;
-  width: 100%;
-  max-width: 400px;
-  display: flex;
-  align-items: center;
-  padding: 4px 8px;
-`;
+const Search = styled('div')(({ theme }) => ({
+  position: 'relative',
+  borderRadius: theme.shape.borderRadius,
+  backgroundColor: alpha('#00ff00', 0.1),
+  '&:hover': {
+    backgroundColor: alpha('#00ff00', 0.2),
+  },
+  marginRight: theme.spacing(2),
+  marginLeft: 0,
+  width: '100%',
+  [theme.breakpoints.up('sm')]: {
+    marginLeft: theme.spacing(3),
+    width: 'auto',
+  },
+  transition: 'background-color 0.3s ease',
+}));
 
-const SearchIconWrapper = styled.div`
-  padding: 0 8px;
-  height: 100%;
-  position: absolute;
-  pointer-events: none;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: rgba(255, 255, 255, 0.5);
-`;
+const SearchIconWrapper = styled('div')(({ theme }) => ({
+  padding: theme.spacing(0, 2),
+  height: '100%',
+  position: 'absolute',
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+}));
 
-const StyledInputBase = styled(InputBase)`
-  color: inherit;
-  width: 100%;
-  padding-left: 40px;
-  
-  & .MuiInputBase-input {
-    padding: 8px;
-    width: 100%;
-  }
-`;
+const StyledInputBase = styled(InputBase)(({ theme }) => ({
+  color: '#00ff00',
+  '& .MuiInputBase-input': {
+    padding: theme.spacing(1, 1, 1, 0),
+    paddingLeft: `calc(1em + ${theme.spacing(4)})`,
+    transition: theme.transitions.create('width'),
+    width: '100%',
+    [theme.breakpoints.up('md')]: {
+      width: '20ch',
+    },
+  },
+}));
 
-const IconsContainer = styled(Box)`
-  display: flex;
-  align-items: center;
-  gap: 16px;
-`;
+const IconsContainer = styled(Box)({
+  display: 'flex',
+  alignItems: 'center',
+  gap: '16px',
+});
 
 function Navbar() {
-  const [anchorEl, setAnchorEl] = React.useState(null);
-  const open = Boolean(anchorEl);
+  const navigate = useNavigate();
+  const theme = useTheme();
+  const [darkMode, setDarkMode] = React.useState(false);
 
-  const handleClick = (event) => {
-    setAnchorEl(event.currentTarget);
-  };
-
-  const handleClose = () => {
-    setAnchorEl(null);
+  const toggleDarkMode = () => {
+    setDarkMode(!darkMode);
+    // Implement theme switching logic here
   };
 
   return (
@@ -93,37 +103,17 @@ function Navbar() {
         <Box sx={{ flexGrow: 1 }} />
 
         <IconsContainer>
-          <IconButton color="inherit">
+          <IconButton color="inherit" onClick={toggleDarkMode} aria-label="toggle dark mode">
+            {darkMode ? <Brightness7 /> : <Brightness4 />}
+          </IconButton>
+          <IconButton color="inherit" onClick={() => navigate('/notifications')} aria-label="notifications">
             <NotificationsIcon />
           </IconButton>
-          <IconButton color="inherit">
+          <IconButton color="inherit" onClick={() => navigate('/settings')} aria-label="settings">
             <SettingsIcon />
           </IconButton>
-          <IconButton
-            onClick={handleClick}
-            size="small"
-            sx={{ ml: 2 }}
-            aria-controls={open ? 'account-menu' : undefined}
-            aria-haspopup="true"
-            aria-expanded={open ? 'true' : undefined}
-          >
-            <Avatar sx={{ width: 32, height: 32 }}>U</Avatar>
-          </IconButton>
+          <ProfileMenu />
         </IconsContainer>
-
-        <Menu
-          anchorEl={anchorEl}
-          id="account-menu"
-          open={open}
-          onClose={handleClose}
-          onClick={handleClose}
-          transformOrigin={{ horizontal: 'right', vertical: 'top' }}
-          anchorOrigin={{ horizontal: 'right', vertical: 'bottom' }}
-        >
-          <MenuItem onClick={handleClose}>Profile</MenuItem>
-          <MenuItem onClick={handleClose}>My Account</MenuItem>
-          <MenuItem onClick={handleClose}>Logout</MenuItem>
-        </Menu>
       </Toolbar>
     </StyledAppBar>
   );

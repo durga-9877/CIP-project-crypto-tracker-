@@ -1,5 +1,5 @@
 import React from 'react';
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { ThemeProvider, createTheme } from '@mui/material';
 import CssBaseline from '@mui/material/CssBaseline';
 import styled from 'styled-components';
@@ -13,12 +13,15 @@ import Alerts from './pages/Alerts';
 import Social from './pages/Social';
 import Login from './pages/Login';
 import Register from './pages/Register';
+import Logout from './pages/Logout';
 import CountryCryptoRecommendation from './components/CountryCryptoRecommendation';
 import UserManual from './components/UserManual';
 import CryptoSearch from './components/CryptoSearch';
 import Profile from './pages/Profile';
 import Wallet from './pages/Wallet';
 import Settings from './pages/Settings';
+import { AuthProvider } from './contexts/AuthContext';
+import PrivateRoute from './components/PrivateRoute';
 
 const theme = createTheme({
   palette: {
@@ -56,33 +59,36 @@ const MainContent = styled.main`
 
 function App() {
   return (
-    <ThemeProvider theme={theme}>
-      <CssBaseline />
-      <Router>
-        <AppContainer>
-          <Sidebar />
-          <MainContent>
-            <Navbar />
-            <Routes>
-              <Route path="/" element={<Dashboard />} />
-              <Route path="/portfolio" element={<Portfolio />} />
-              <Route path="/market" element={<Market />} />
-              <Route path="/analysis" element={<Analysis />} />
-              <Route path="/alerts" element={<Alerts />} />
-              <Route path="/social" element={<Social />} />
-              <Route path="/login" element={<Login />} />
-              <Route path="/register" element={<Register />} />
-              <Route path="/country-recommendations" element={<CountryCryptoRecommendation />} />
-              <Route path="/user-manual" element={<UserManual />} />
-              <Route path="/crypto-search" element={<CryptoSearch />} />
-              <Route path="/profile" element={<Profile />} />
-              <Route path="/wallet" element={<Wallet />} />
-              <Route path="/settings" element={<Settings />} />
-            </Routes>
-          </MainContent>
-        </AppContainer>
-      </Router>
-    </ThemeProvider>
+    <AuthProvider>
+      <ThemeProvider theme={theme}>
+        <CssBaseline />
+        <Router>
+          <AppContainer>
+            <Sidebar />
+            <MainContent>
+              <Navbar />
+              <Routes>
+                <Route path="/login" element={<Login />} />
+                <Route path="/register" element={<Register />} />
+                <Route path="/logout" element={<Logout />} />
+                <Route path="/" element={<PrivateRoute><Dashboard /></PrivateRoute>} />
+                <Route path="/portfolio" element={<PrivateRoute><Portfolio /></PrivateRoute>} />
+                <Route path="/market" element={<PrivateRoute><Market /></PrivateRoute>} />
+                <Route path="/analysis" element={<PrivateRoute><Analysis /></PrivateRoute>} />
+                <Route path="/alerts" element={<PrivateRoute><Alerts /></PrivateRoute>} />
+                <Route path="/social" element={<PrivateRoute><Social /></PrivateRoute>} />
+                <Route path="/country-recommendations" element={<PrivateRoute><CountryCryptoRecommendation /></PrivateRoute>} />
+                <Route path="/user-manual" element={<PrivateRoute><UserManual /></PrivateRoute>} />
+                <Route path="/crypto-search" element={<PrivateRoute><CryptoSearch /></PrivateRoute>} />
+                <Route path="/profile" element={<PrivateRoute><Profile /></PrivateRoute>} />
+                <Route path="/wallet" element={<PrivateRoute><Wallet /></PrivateRoute>} />
+                <Route path="/settings" element={<PrivateRoute><Settings /></PrivateRoute>} />
+              </Routes>
+            </MainContent>
+          </AppContainer>
+        </Router>
+      </ThemeProvider>
+    </AuthProvider>
   );
 }
 

@@ -1,145 +1,71 @@
-import React, { useState, useEffect } from 'react';
-import { Card, Form, Input, Button, Typography, Space, Avatar, Upload, message } from 'antd';
-import { UserOutlined, CameraOutlined } from '@ant-design/icons';
-import { auth, db } from '../config/firebase';
-import { doc, getDoc, updateDoc } from 'firebase/firestore';
+import React, { useState, useContext } from 'react';
+import { Box, Container, Typography, TextField, Button, Avatar, Grid } from '@mui/material';
 import styled from 'styled-components';
+import { AuthContext } from '../contexts/AuthContext';
 
-const { Title, Text } = Typography;
-
-const ProfileContainer = styled.div`
-  padding: 24px;
-  max-width: 800px;
-  margin: 0 auto;
-`;
-
-const StyledCard = styled(Card)`
-  margin-bottom: 24px;
-  border-radius: 12px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-`;
-
-const AvatarContainer = styled.div`
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  margin-bottom: 24px;
-`;
-
-const StyledAvatar = styled(Avatar)`
-  width: 120px;
-  height: 120px;
-  margin-bottom: 16px;
-  background: #FFB700;
+const ProfileContainer = styled(Container)`
+  padding: 2rem;
 `;
 
 const Profile = () => {
-  const [form] = Form.useForm();
-  const [loading, setLoading] = useState(true);
-  const [userData, setUserData] = useState(null);
+  const { currentUser } = useContext(AuthContext);
+  const [displayName, setDisplayName] = useState(currentUser?.displayName || '');
+  const [email, setEmail] = useState(currentUser?.email || '');
 
-  useEffect(() => {
-    const fetchUserData = async () => {
-      try {
-        const userDoc = await getDoc(doc(db, 'users', auth.currentUser.uid));
-        if (userDoc.exists()) {
-          setUserData(userDoc.data());
-          form.setFieldsValue(userDoc.data());
-        }
-        setLoading(false);
-      } catch (error) {
-        console.error('Error fetching user data:', error);
-        message.error('Failed to load profile data');
-        setLoading(false);
-      }
-    };
-
-    fetchUserData();
-  }, [form]);
-
-  const onFinish = async (values) => {
-    try {
-      await updateDoc(doc(db, 'users', auth.currentUser.uid), values);
-      message.success('Profile updated successfully');
-    } catch (error) {
-      console.error('Error updating profile:', error);
-      message.error('Failed to update profile');
-    }
+  const handleUpdateProfile = async (e) => {
+    e.preventDefault();
+    // Add profile update logic here
   };
 
   return (
     <ProfileContainer>
-      <StyledCard>
-        <AvatarContainer>
-          <StyledAvatar icon={<UserOutlined />} />
-          <Upload
-            showUploadList={false}
-            beforeUpload={() => false}
-            onChange={({ file }) => {
-              if (file) {
-                // Handle image upload here
-                message.info('Image upload functionality will be implemented');
-              }
-            }}
-          >
-            <Button icon={<CameraOutlined />}>Change Photo</Button>
-          </Upload>
-        </AvatarContainer>
+      <Box sx={{ mb: 4 }}>
+        <Typography variant="h4" component="h1" gutterBottom>
+          Profile Settings
+        </Typography>
+      </Box>
 
-        <Form
-          form={form}
-          layout="vertical"
-          onFinish={onFinish}
-          initialValues={userData}
-        >
-          <Form.Item
-            name="name"
-            label="Full Name"
-            rules={[{ required: true, message: 'Please input your name!' }]}
-          >
-            <Input prefix={<UserOutlined />} />
-          </Form.Item>
+      <Grid container spacing={3}>
+        <Grid item xs={12} md={4}>
+          <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', p: 3 }}>
+            <Avatar
+              sx={{ width: 120, height: 120, mb: 2 }}
+              src={currentUser?.photoURL}
+            />
+            <Typography variant="h6">{currentUser?.displayName || 'User'}</Typography>
+            <Typography variant="body2" color="text.secondary">
+              {currentUser?.email}
+            </Typography>
+          </Box>
+        </Grid>
 
-          <Form.Item
-            name="email"
-            label="Email"
-            rules={[
-              { required: true, message: 'Please input your email!' },
-              { type: 'email', message: 'Please enter a valid email!' }
-            ]}
-          >
-            <Input disabled />
-          </Form.Item>
-
-          <Form.Item
-            name="phone"
-            label="Phone Number"
-            rules={[
-              { required: true, message: 'Please input your phone number!' },
-              { pattern: /^[0-9]{10}$/, message: 'Please enter a valid phone number!' }
-            ]}
-          >
-            <Input />
-          </Form.Item>
-
-          <Form.Item>
-            <Button type="primary" htmlType="submit" loading={loading}>
+        <Grid item xs={12} md={8}>
+          <Box component="form" onSubmit={handleUpdateProfile} sx={{ p: 3, bgcolor: 'background.paper', borderRadius: 2, boxShadow: 1 }}>
+            <TextField
+              fullWidth
+              label="Display Name"
+              value={displayName}
+              onChange={(e) => setDisplayName(e.target.value)}
+              margin="normal"
+            />
+            <TextField
+              fullWidth
+              label="Email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              margin="normal"
+              disabled
+            />
+            <Button
+              type="submit"
+              variant="contained"
+              sx={{ mt: 2 }}
+            >
               Update Profile
             </Button>
-          </Form.Item>
-        </Form>
-      </StyledCard>
-
-      <StyledCard title="Account Security">
-        <Space direction="vertical" style={{ width: '100%' }}>
-          <Button type="primary" danger>
-            Change Password
-          </Button>
-          <Button type="default">
-            Enable Two-Factor Authentication
-          </Button>
-        </Space>
-      </StyledCard>
+          </Box>
+        </Grid>
+      </Grid>
     </ProfileContainer>
   );
 };

@@ -15,9 +15,7 @@ import ProfileMenu from './ProfileMenu';
 import PersonIcon from '@mui/icons-material/Person';
 import AccountBalanceWalletIcon from '@mui/icons-material/AccountBalanceWallet';
 import SettingsIcon from '@mui/icons-material/Settings';
-
 const { Sider } = Layout;
-
 const StyledSider = styled(Sider)`
   background: #1A1F3C !important;
   border-right: 1px solid rgba(255, 255, 255, 0.1);
@@ -26,7 +24,6 @@ const StyledSider = styled(Sider)`
   left: 0;
   z-index: 1000;
 `;
-
 const Logo = styled.div`
   height: 64px;
   padding: 16px;

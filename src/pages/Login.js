@@ -1,236 +1,152 @@
 import React, { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
-import { useAuthState } from 'react-firebase-hooks/auth';
+import { useNavigate } from 'react-router-dom';
+import { signInWithEmailAndPassword } from 'firebase/auth';
 import { auth } from '../config/firebase';
 import { 
-  signInWithEmailAndPassword,
-  signInWithPhoneNumber,
-  RecaptchaVerifier
-} from 'firebase/auth';
-import { Card, Form, Input, Button, Typography, Space, Alert, Divider, Tabs } from 'antd';
-import { UserOutlined, LockOutlined, PhoneOutlined } from '@ant-design/icons';
-import styled from 'styled-components';
+  Container, 
+  TextField, 
+  Button, 
+  Typography, 
+  Box,
+  Paper,
+  Alert,
+  CircularProgress
+} from '@mui/material';
+import { styled } from '@mui/material/styles';
 
-const { Title, Text } = Typography;
-const { TabPane } = Tabs;
+const StyledContainer = styled(Container)(({ theme }) => ({
+  minHeight: '100vh',
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+  background: 'linear-gradient(135deg, #1A1F3C 0%, #12152C 100%)',
+}));
 
-const LoginContainer = styled.div`
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  min-height: 100vh;
-  background: linear-gradient(135deg, #1A1F3C 0%, #12152C 100%);
-`;
-
-const StyledCard = styled(Card)`
-  width: 100%;
-  max-width: 400px;
-  border-radius: 12px;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
-  background: rgba(255, 255, 255, 0.05);
-  backdrop-filter: blur(10px);
-`;
+const StyledPaper = styled(Paper)(({ theme }) => ({
+  padding: theme.spacing(4),
+  display: 'flex',
+  flexDirection: 'column',
+  alignItems: 'center',
+  maxWidth: 400,
+  width: '100%',
+  background: 'rgba(255, 255, 255, 0.05)',
+  backdropFilter: 'blur(10px)',
+  borderRadius: '12px',
+  boxShadow: '0 8px 24px rgba(0, 0, 0, 0.2)',
+}));
 
 const Login = () => {
-  const [user, loading] = useAuthState(auth);
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const [error, setError] = useState('');
-  const [phoneNumber, setPhoneNumber] = useState('');
-  const [otp, setOtp] = useState('');
-  const [showOtpInput, setShowOtpInput] = useState(false);
-  const [confirmationResult, setConfirmationResult] = useState(null);
+  const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
-  const setupRecaptcha = () => {
-    if (!window.recaptchaVerifier) {
-      window.recaptchaVerifier = new RecaptchaVerifier(auth, 'recaptcha-container', {
-        'size': 'normal',
-        'callback': (response) => {
-          handlePhoneSignIn();
-        },
-        'expired-callback': () => {
-          setError('reCAPTCHA expired. Please try again.');
-        }
-      });
-    }
-  };
+  const handleLogin = async (e) => {
+    e.preventDefault();
+    setError('');
+    setLoading(true);
 
-  const handlePhoneSignIn = async () => {
+    if (!email || !password) {
+      setError('Please fill in all fields');
+      setLoading(false);
+      return;
+    }
+
     try {
-      if (!phoneNumber) {
-        setError('Please enter a phone number');
-        return;
+      await signInWithEmailAndPassword(auth, email, password);
+      navigate('/dashboard');
+    } catch (error) {
+      let errorMessage = 'Failed to login. Please try again.';
+      if (error.code === 'auth/user-not-found' || error.code === 'auth/wrong-password') {
+        errorMessage = 'Invalid email or password.';
+      } else if (error.code === 'auth/invalid-email') {
+        errorMessage = 'Invalid email address.';
+      } else if (error.code === 'auth/too-many-requests') {
+        errorMessage = 'Too many failed attempts. Please try again later.';
       }
-
-      // Format phone number with country code
-      const formattedPhoneNumber = `+91${phoneNumber.replace(/\D/g, '')}`;
-      
-      // Reset any previous errors
-      setError('');
-      
-      // Setup recaptcha
-      setupRecaptcha();
-      
-      const appVerifier = window.recaptchaVerifier;
-      console.log('Sending OTP to:', formattedPhoneNumber);
-      
-      const confirmation = await signInWithPhoneNumber(auth, formattedPhoneNumber, appVerifier);
-      setConfirmationResult(confirmation);
-      setShowOtpInput(true);
-    } catch (err) {
-      console.error('Error sending OTP:', err);
-      setError(err.message || 'Failed to send OTP. Please try again.');
-      // Reset recaptcha on error
-      window.recaptchaVerifier = null;
+      setError(errorMessage);
+    } finally {
+      setLoading(false);
     }
   };
-
-  const verifyOtp = async () => {
-    try {
-      await confirmationResult.confirm(otp);
-      navigate('/dashboard');
-    } catch (err) {
-      setError(err.message);
-    }
-  };
-
-  const onFinish = async (values) => {
-    try {
-      await signInWithEmailAndPassword(auth, values.email, values.password);
-      navigate('/dashboard');
-    } catch (err) {
-      setError(err.message);
-    }
-  };
-
-  if (loading) {
-    return <div>Loading...</div>;
-  }
-
-  if (user) {
-    navigate('/dashboard');
-    return null;
-  }
 
   return (
-    <LoginContainer>
-      <StyledCard>
-        <Space direction="vertical" size="large" style={{ width: '100%' }}>
-          <div style={{ textAlign: 'center' }}>
-            <Title level={2} style={{ color: '#FFB700', marginBottom: 0 }}>Welcome Back</Title>
-            <Text type="secondary">Sign in to continue to your account</Text>
-          </div>
-
+    <StyledContainer>
+      <StyledPaper elevation={3}>
+        <Typography component="h1" variant="h4" align="center" gutterBottom sx={{ color: '#FFB700' }}>
+          Welcome Back
+        </Typography>
+        <Typography variant="body1" color="text.secondary" align="center" sx={{ mb: 3 }}>
+          Sign in to your account
+        </Typography>
+        <Box component="form" onSubmit={handleLogin} sx={{ width: '100%' }}>
           {error && (
-            <Alert
-              message="Error"
-              description={error}
-              type="error"
-              showIcon
-            />
+            <Alert severity="error" sx={{ mb: 2 }}>
+              {error}
+            </Alert>
           )}
-
-          <Tabs defaultActiveKey="1" centered>
-            <TabPane tab="Email Login" key="1">
-              <Form
-                name="login"
-                onFinish={onFinish}
-                layout="vertical"
-              >
-                <Form.Item
-                  name="email"
-                  rules={[{ required: true, message: 'Please input your email!' }]}
-                >
-                  <Input
-                    prefix={<UserOutlined />}
-                    placeholder="Email"
-                    size="large"
-                  />
-                </Form.Item>
-
-                <Form.Item
-                  name="password"
-                  rules={[{ required: true, message: 'Please input your password!' }]}
-                >
-                  <Input.Password
-                    prefix={<LockOutlined />}
-                    placeholder="Password"
-                    size="large"
-                  />
-                </Form.Item>
-
-                <Form.Item>
-                  <Button type="primary" htmlType="submit" size="large" block>
-                    Sign In
-                  </Button>
-                </Form.Item>
-              </Form>
-            </TabPane>
-
-            <TabPane tab="Phone Login" key="2">
-              {!showOtpInput ? (
-                <Form layout="vertical">
-                  <Form.Item
-                    rules={[{ required: true, message: 'Please input your phone number!' }]}
-                  >
-                    <Input
-                      prefix={<PhoneOutlined />}
-                      placeholder="Phone Number"
-                      size="large"
-                      value={phoneNumber}
-                      onChange={(e) => setPhoneNumber(e.target.value)}
-                      addonBefore="+91"
-                    />
-                  </Form.Item>
-
-                  <Form.Item>
-                    <Button 
-                      type="primary" 
-                      size="large" 
-                      block
-                      onClick={handlePhoneSignIn}
-                    >
-                      Send OTP
-                    </Button>
-                  </Form.Item>
-                </Form>
-              ) : (
-                <Form layout="vertical">
-                  <Form.Item
-                    rules={[{ required: true, message: 'Please input the OTP!' }]}
-                  >
-                    <Input
-                      placeholder="Enter OTP"
-                      size="large"
-                      value={otp}
-                      onChange={(e) => setOtp(e.target.value)}
-                    />
-                  </Form.Item>
-
-                  <Form.Item>
-                    <Button 
-                      type="primary" 
-                      size="large" 
-                      block
-                      onClick={verifyOtp}
-                    >
-                      Verify OTP
-                    </Button>
-                  </Form.Item>
-                </Form>
-              )}
-              <div id="recaptcha-container"></div>
-            </TabPane>
-          </Tabs>
-
-          <div style={{ textAlign: 'center' }}>
-            <Text>Don't have an account? </Text>
-            <Link to="/register">
-              <Text style={{ color: '#FFB700' }}>Sign up</Text>
-            </Link>
-          </div>
-        </Space>
-      </StyledCard>
-    </LoginContainer>
+          <TextField
+            margin="normal"
+            required
+            fullWidth
+            id="email"
+            label="Email Address"
+            name="email"
+            autoComplete="email"
+            autoFocus
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            disabled={loading}
+            sx={{ mb: 2 }}
+          />
+          <TextField
+            margin="normal"
+            required
+            fullWidth
+            name="password"
+            label="Password"
+            type="password"
+            id="password"
+            autoComplete="current-password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            disabled={loading}
+            sx={{ mb: 3 }}
+          />
+          <Button
+            type="submit"
+            fullWidth
+            variant="contained"
+            disabled={loading}
+            sx={{
+              mb: 2,
+              backgroundColor: '#FFB700',
+              '&:hover': {
+                backgroundColor: '#FFB700',
+                opacity: 0.9,
+              },
+              height: '48px',
+            }}
+          >
+            {loading ? (
+              <CircularProgress size={24} sx={{ color: 'white' }} />
+            ) : (
+              'Login'
+            )}
+          </Button>
+          <Button
+            fullWidth
+            variant="text"
+            onClick={() => navigate('/register')}
+            disabled={loading}
+            sx={{ color: '#FFB700' }}
+          >
+            Don't have an account? Register
+          </Button>
+        </Box>
+      </StyledPaper>
+    </StyledContainer>
   );
 };
 

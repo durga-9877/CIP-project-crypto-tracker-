@@ -1,9 +1,7 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Menu, Dropdown, Avatar, Space } from 'antd';
-import { UserOutlined, LogoutOutlined, SettingOutlined, WalletOutlined } from '@ant-design/icons';
-import { auth } from '../config/firebase';
-import { signOut } from 'firebase/auth';
+import { Avatar, Menu, Dropdown, Space } from 'antd';
+import { UserOutlined, LogoutOutlined, SettingOutlined } from '@ant-design/icons';
 import styled from 'styled-components';
 
 const StyledAvatar = styled(Avatar)`
@@ -14,54 +12,37 @@ const StyledAvatar = styled(Avatar)`
   }
 `;
 
+const StyledDropdown = styled(Dropdown)`
+  .ant-dropdown-menu {
+    background-color: #fff;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  }
+`;
+
 const ProfileMenu = () => {
   const navigate = useNavigate();
 
-  const handleLogout = async () => {
-    try {
-      await signOut(auth);
-      navigate('/login');
-    } catch (error) {
-      console.error('Error signing out:', error);
-    }
-  };
-
-  const handleProfileClick = () => {
-    navigate('/profile');
-  };
-
-  const handleSettingsClick = () => {
-    navigate('/settings');
-  };
-
-  const handleWalletClick = () => {
-    navigate('/wallet');
-  };
-
   const menu = (
     <Menu>
-      <Menu.Item key="profile" icon={<UserOutlined />} onClick={handleProfileClick}>
+      <Menu.Item key="profile" icon={<UserOutlined />} onClick={() => navigate('/profile')}>
         Profile
       </Menu.Item>
-      <Menu.Item key="wallet" icon={<WalletOutlined />} onClick={handleWalletClick}>
-        My Wallet
-      </Menu.Item>
-      <Menu.Item key="settings" icon={<SettingOutlined />} onClick={handleSettingsClick}>
+      <Menu.Item key="settings" icon={<SettingOutlined />} onClick={() => navigate('/settings')}>
         Settings
       </Menu.Item>
       <Menu.Divider />
-      <Menu.Item key="logout" icon={<LogoutOutlined />} onClick={handleLogout}>
+      <Menu.Item key="logout" icon={<LogoutOutlined />} onClick={() => navigate('/logout')}>
         Logout
       </Menu.Item>
     </Menu>
   );
 
   return (
-    <Dropdown overlay={menu} placement="bottomRight" trigger={['click']}>
+    <StyledDropdown overlay={menu} placement="bottomRight" trigger={['click']}>
       <Space>
         <StyledAvatar icon={<UserOutlined />} />
       </Space>
-    </Dropdown>
+    </StyledDropdown>
   );
 };
 

@@ -1,166 +1,104 @@
-import React, { useState, useEffect } from 'react';
-import { Card, Form, Switch, Select, Button, Typography, Space, Divider, Radio, Input } from 'antd';
-import { auth, db } from '../config/firebase';
-import { doc, getDoc, updateDoc } from 'firebase/firestore';
+import React, { useState, useContext } from 'react';
+import { Box, Container, Typography, Grid, Card, CardContent, Switch, FormControlLabel, Button } from '@mui/material';
 import styled from 'styled-components';
+import { AuthContext } from '../contexts/AuthContext';
 
-const { Title, Text } = Typography;
-const { Option } = Select;
-
-const SettingsContainer = styled.div`
-  padding: 24px;
-  max-width: 800px;
-  margin: 0 auto;
-`;
-
-const StyledCard = styled(Card)`
-  margin-bottom: 24px;
-  border-radius: 12px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+const SettingsContainer = styled(Container)`
+  padding: 2rem;
 `;
 
 const Settings = () => {
-  const [form] = Form.useForm();
-  const [loading, setLoading] = useState(true);
-  const [settings, setSettings] = useState({
-    notifications: true,
-    theme: 'dark',
-    language: 'en',
-    currency: 'USD',
-    twoFactor: false,
-    emailNotifications: true,
-    priceAlerts: true,
-    marketUpdates: true
-  });
+  const { currentUser } = useContext(AuthContext);
+  const [notifications, setNotifications] = useState(true);
+  const [darkMode, setDarkMode] = useState(true);
+  const [twoFactor, setTwoFactor] = useState(false);
 
-  useEffect(() => {
-    const fetchSettings = async () => {
-      try {
-        const userDoc = await getDoc(doc(db, 'users', auth.currentUser.uid));
-        if (userDoc.exists()) {
-          const data = userDoc.data();
-          if (data.settings) {
-            setSettings(data.settings);
-            form.setFieldsValue(data.settings);
-          }
-        }
-        setLoading(false);
-      } catch (error) {
-        console.error('Error fetching settings:', error);
-        setLoading(false);
-      }
-    };
-
-    fetchSettings();
-  }, [form]);
-
-  const onFinish = async (values) => {
-    try {
-      await updateDoc(doc(db, 'users', auth.currentUser.uid), {
-        settings: values
-      });
-      setSettings(values);
-    } catch (error) {
-      console.error('Error updating settings:', error);
-    }
+  const handleSaveSettings = () => {
+    // Add settings save logic here
+    console.log('Settings saved for user:', currentUser?.email);
   };
 
   return (
     <SettingsContainer>
-      <StyledCard>
-        <Title level={2}>Settings</Title>
-        <Form
-          form={form}
-          layout="vertical"
-          onFinish={onFinish}
-          initialValues={settings}
-        >
-          <Divider orientation="left">Appearance</Divider>
-          <Form.Item
-            name="theme"
-            label="Theme"
-          >
-            <Radio.Group>
-              <Radio.Button value="light">Light</Radio.Button>
-              <Radio.Button value="dark">Dark</Radio.Button>
-              <Radio.Button value="system">System</Radio.Button>
-            </Radio.Group>
-          </Form.Item>
+      <Box sx={{ mb: 4 }}>
+        <Typography variant="h4" component="h1" gutterBottom>
+          Settings
+        </Typography>
+        <Typography variant="subtitle1" color="text.secondary">
+          Manage your account preferences, {currentUser?.email}
+        </Typography>
+      </Box>
 
-          <Divider orientation="left">Preferences</Divider>
-          <Form.Item
-            name="language"
-            label="Language"
-          >
-            <Select>
-              <Option value="en">English</Option>
-              <Option value="es">Spanish</Option>
-              <Option value="fr">French</Option>
-              <Option value="de">German</Option>
-            </Select>
-          </Form.Item>
+      <Grid container spacing={3}>
+        <Grid item xs={12} md={6}>
+          <Card>
+            <CardContent>
+              <Typography variant="h6" gutterBottom>
+                Notification Settings
+              </Typography>
+              <FormControlLabel
+                control={
+                  <Switch
+                    checked={notifications}
+                    onChange={(e) => setNotifications(e.target.checked)}
+                  />
+                }
+                label="Enable Notifications"
+              />
+            </CardContent>
+          </Card>
+        </Grid>
 
-          <Form.Item
-            name="currency"
-            label="Default Currency"
-          >
-            <Select>
-              <Option value="USD">USD ($)</Option>
-              <Option value="EUR">EUR (€)</Option>
-              <Option value="GBP">GBP (£)</Option>
-              <Option value="JPY">JPY (¥)</Option>
-            </Select>
-          </Form.Item>
+        <Grid item xs={12} md={6}>
+          <Card>
+            <CardContent>
+              <Typography variant="h6" gutterBottom>
+                Appearance
+              </Typography>
+              <FormControlLabel
+                control={
+                  <Switch
+                    checked={darkMode}
+                    onChange={(e) => setDarkMode(e.target.checked)}
+                  />
+                }
+                label="Dark Mode"
+              />
+            </CardContent>
+          </Card>
+        </Grid>
 
-          <Divider orientation="left">Notifications</Divider>
-          <Form.Item
-            name="notifications"
-            label="Enable Notifications"
-            valuePropName="checked"
-          >
-            <Switch />
-          </Form.Item>
+        <Grid item xs={12} md={6}>
+          <Card>
+            <CardContent>
+              <Typography variant="h6" gutterBottom>
+                Security
+              </Typography>
+              <FormControlLabel
+                control={
+                  <Switch
+                    checked={twoFactor}
+                    onChange={(e) => setTwoFactor(e.target.checked)}
+                  />
+                }
+                label="Two-Factor Authentication"
+              />
+            </CardContent>
+          </Card>
+        </Grid>
 
-          <Form.Item
-            name="emailNotifications"
-            label="Email Notifications"
-            valuePropName="checked"
-          >
-            <Switch />
-          </Form.Item>
-
-          <Form.Item
-            name="priceAlerts"
-            label="Price Alerts"
-            valuePropName="checked"
-          >
-            <Switch />
-          </Form.Item>
-
-          <Form.Item
-            name="marketUpdates"
-            label="Market Updates"
-            valuePropName="checked"
-          >
-            <Switch />
-          </Form.Item>
-
-          <Divider orientation="left">Security</Divider>
-          <Form.Item
-            name="twoFactor"
-            label="Two-Factor Authentication"
-            valuePropName="checked"
-          >
-            <Switch />
-          </Form.Item>
-
-          <Form.Item>
-            <Button type="primary" htmlType="submit" loading={loading}>
+        <Grid item xs={12}>
+          <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 2 }}>
+            <Button
+              variant="contained"
+              color="primary"
+              onClick={handleSaveSettings}
+            >
               Save Changes
             </Button>
-          </Form.Item>
-        </Form>
-      </StyledCard>
+          </Box>
+        </Grid>
+      </Grid>
     </SettingsContainer>
   );
 };

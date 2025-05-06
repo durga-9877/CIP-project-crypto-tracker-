@@ -8,21 +8,17 @@ body {
   background-color: #121212;
   color: #fff;
 }
-
 code {
   font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
     monospace;
 }
-
 * {
   box-sizing: border-box;
 }
-
 a {
   color: inherit;
   text-decoration: none;
 }
-
 button {
   cursor: pointer;
 } 
